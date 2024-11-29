@@ -3,6 +3,20 @@
 version = 4
 
 [[package]]
+name = "NoUniqueWeapons"
+version = "0.1.0"
+dependencies = [
+ "cobapi",
+ "engage",
+ "libc-nnsdk 0.3.0 (git+https://github.com/ultimate-research/libc-nnsdk?rev=c83d92a930852db6028442dbba930aa14012172c)",
+ "num",
+ "serde",
+ "skyline 0.2.1 (git+https://github.com/ultimate-research/skyline-rs?rev=ba4706a6faa1a705b37cc962826b0426d72bf604)",
+ "toml",
+ "unity",
+]
+
+[[package]]
 name = "arrayvec"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -26,20 +40,6 @@ version = "0.3.0"
 source = "git+https://github.com/DivineDragonFanClub/cobapi#cc1080aa35fb1e4f7c465da20ac6bb66b82d7c57"
 dependencies = [
  "engage",
-]
-
-[[package]]
-name = "debug"
-version = "0.1.0"
-dependencies = [
- "cobapi",
- "engage",
- "libc-nnsdk 0.3.0 (git+https://github.com/ultimate-research/libc-nnsdk?rev=c83d92a930852db6028442dbba930aa14012172c)",
- "num",
- "serde",
- "skyline 0.2.1 (git+https://github.com/ultimate-research/skyline-rs?rev=ba4706a6faa1a705b37cc962826b0426d72bf604)",
- "toml",
- "unity",
 ]
 
 [[package]]
