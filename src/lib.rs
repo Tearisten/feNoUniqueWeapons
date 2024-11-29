@@ -13,14 +13,13 @@ use engage::{
 };
 use skyline::patching::Patch;
 use std::sync::Mutex;
+use std::thread::sleep;
+use std::time::Duration;
 
 
 pub const EMPTY: &str = "";
 pub const ESID_KEY: &str = "G_ESID_TOGGLE";
-static mut ESID_LIST: Mutex<Vec<&Il2CppString>> = Mutex::new(Vec::new());
-
-#[skyline::from_offset(0x03785820)]
-pub fn copy_str(string: &Il2CppString, method_info: OptionalMethod) -> &'static mut Il2CppString;
+static mut ESID_LIST: Mutex<Vec<String>> = Mutex::new(Vec::new());
 
 pub struct EsidMod;
 impl ConfigBasicMenuItemSwitchMethods for EsidMod {
@@ -65,20 +64,23 @@ extern "C" fn create_settings(event: &Event<SystemEvent>) {
             match ev {
                 SystemEvent::ProcInstJump {proc, label } => {
                     if proc.hashcode == -988690862 && *label == 0 {
+                        let mut bank_list = ESID_LIST.lock().unwrap();
                         let item_list = ItemData::get_list().unwrap();
-                        if ESID_LIST.lock().unwrap().len() == 0
+                        if bank_list.len() == 0
                         {
                             for x in 0..item_list.len()
                             {
                                 let item = &item_list[x];
-                                ESID_LIST.lock().unwrap().push(Il2CppString::copy(get_equip(item, None)));
+                                bank_list.push(Il2CppString::to_string(get_equip(item, None)));
                             }
                         }
+                        sleep(Duration::from_secs(5));
                     }
                 }
                 _ => {},
             }
-        } 
+        }
+        // else {  println!("We received a missing event, and we don't care!"); }
     }
 }
 
@@ -95,14 +97,12 @@ pub fn load_settings1(this: u64, stream: u64, method_info: OptionalMethod) -> bo
             create_variables();
         }
 
-        if (ESID_LIST.lock().unwrap().len() > 0)
-        {
-            patch(GameVariableManager::get_bool(ESID_KEY));
-        }
+        patch(GameVariableManager::get_bool(ESID_KEY));
     }
 
     return value;
 }
+
 #[unity::from_offset("App", "ItemData", "set_EquipCondition")]
 pub fn set_equip(this: &ItemData, value : &'static Il2CppString, method_info: OptionalMethod);
 
@@ -111,34 +111,38 @@ pub fn get_equip(this: &ItemData, method_info: OptionalMethod) -> &'static Il2Cp
 
 pub fn patch(result: bool){
     unsafe {
+        let bank_list = ESID_LIST.lock().unwrap();
         let item_list = ItemData::get_list_mut().unwrap();
-        if item_list.len() != ESID_LIST.lock().unwrap().len()
+        if bank_list.len() > 0
         {
-            skyline::error::show_error(
-                69,
-                "Custom plugin has panicked! Please open the details and send a screenshot to the developer, then close the game.\n\0",
-                &ESID_LIST.lock().unwrap().len().to_string()
-            );
-        }
-
-        for x in 0..item_list.len() {
-            let item = &mut item_list[x];
-            if result
+            if item_list.len() != bank_list.len()
             {
-                set_equip(item, "".into(), None);
+                skyline::error::show_error(
+                    69,
+                    "Custom plugin has panicked! Please open the details and send a screenshot to the developer, then close the game.\n\0",
+                    &bank_list.len().to_string()
+                );
             }
-            else
-            {
-                let its = ESID_LIST.lock().unwrap()[x];
-                set_equip(item, its, None);
+
+            for x in 0..item_list.len() {
+                let item = &mut item_list[x];
+                if result
+                {
+                    set_equip(item, "".into(), None);
+                }
+                else
+                {
+                    let its: &'static Il2CppString = Il2CppString::new_static(bank_list[x].clone());
+                    set_equip(item, its, None);
+                }
             }
         }
     }
 }
 
-#[skyline::main(name = "Unique Weapon Toggle")]
+#[skyline::main(name = "NoUniqueWeapons")]
 pub fn main() {
-    println!("Unique Weapon Toggle plugin loaded");
+    println!("No Unique Weapons plugin loaded");
 
     std::panic::set_hook(Box::new(|info| {
         let location = info.location().unwrap();
