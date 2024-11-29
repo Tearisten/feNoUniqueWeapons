@@ -34,16 +34,15 @@ impl ConfigBasicMenuItemSwitchMethods for EsidMod {
             Self::set_help_text(this, None);
             this.update_text();
             patch(result);
-            println!("value changed");
             return BasicMenuResult::se_cursor();
         } else {return BasicMenuResult::new(); }
     }
     extern "C" fn set_help_text(this: &mut ConfigBasicMenuItem, _method_info: OptionalMethod){
         let sid_mode =  GameVariableManager::get_bool(ESID_KEY);
         if sid_mode 
-            {this.help_text = "Unique unit weapons can be equiped by anyone.".into(); }
+            {this.help_text = "A unit's unique weapon can be equiped by anyone.".into(); }
         else
-            {this.help_text = "Unique unit weapons can only be equiped by that unit.".into(); }
+            {this.help_text = "A unit's unique weapon can only be equiped by that unit.".into(); }
     }
     extern "C" fn set_command_text(this: &mut ConfigBasicMenuItem, _method_info: OptionalMethod){
         let sid_mode =  GameVariableManager::get_bool(ESID_KEY);
@@ -56,7 +55,7 @@ impl ConfigBasicMenuItemSwitchMethods for EsidMod {
 
 #[no_mangle]
 extern "C" fn esid_Toggle() -> &'static mut ConfigBasicMenuItem {
-    ConfigBasicMenuItem::new_switch::<EsidMod>("Unique Weapon Access")
+    ConfigBasicMenuItem::new_switch::<EsidMod>("No Unique Weapons")
 }
 
 extern "C" fn create_settings(event: &Event<SystemEvent>) {
@@ -66,7 +65,6 @@ extern "C" fn create_settings(event: &Event<SystemEvent>) {
             match ev {
                 SystemEvent::ProcInstJump {proc, label } => {
                     if proc.hashcode == -988690862 && *label == 0 {
-                        println!("tristen stuff loaded");
                         let item_list = ItemData::get_list().unwrap();
                         if ESID_LIST.lock().unwrap().len() == 0
                         {
@@ -76,16 +74,12 @@ extern "C" fn create_settings(event: &Event<SystemEvent>) {
                                 ESID_LIST.lock().unwrap().push(Il2CppString::copy(get_equip(item, None)));
                             }
                         }
-                        println!("len of list is {}", ESID_LIST.lock().unwrap().len());
-                        // println!("mylist {}",ESID_LIST.lock().unwrap().to_string());
                     }
                 }
                 _ => {},
             }
         } 
-        else {  println!("We received a missing event, and we don't care!"); }
     }
-    
 }
 
 pub fn create_variables() {
@@ -115,16 +109,9 @@ pub fn set_equip(this: &ItemData, value : &'static Il2CppString, method_info: Op
 #[unity::from_offset("App", "ItemData", "get_EquipCondition")]
 pub fn get_equip(this: &ItemData, method_info: OptionalMethod) -> &'static Il2CppString;
 
-// currently doesn't load the setting on game startup
-// everything else works fine
-// except if i try to copy the list on load settings or at a bad time the list is garbage.
-// try hooking into the set_x to store the value rather than doing it here?
-
-// try hooking  isntead?
 pub fn patch(result: bool){
     unsafe {
         let item_list = ItemData::get_list_mut().unwrap();
-        println!("patching len = {}", ESID_LIST.lock().unwrap().len());
         if item_list.len() != ESID_LIST.lock().unwrap().len()
         {
             skyline::error::show_error(
@@ -149,9 +136,9 @@ pub fn patch(result: bool){
     }
 }
 
-#[skyline::main(name = "-----------------testing")]
+#[skyline::main(name = "Unique Weapon Toggle")]
 pub fn main() {
-    println!("-----------------test plugin loaded------------------------------------------------");
+    println!("Unique Weapon Toggle plugin loaded");
 
     std::panic::set_hook(Box::new(|info| {
         let location = info.location().unwrap();
@@ -186,11 +173,8 @@ pub fn main() {
         );
     }));
 
-
-
     cobapi::register_system_event_handler(create_settings);
     cobapi::install_game_setting(esid_Toggle);
     skyline::install_hooks!(load_settings1);
-
 
 }
