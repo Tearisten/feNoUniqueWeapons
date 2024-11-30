@@ -13,8 +13,6 @@ use engage::{
 };
 use skyline::patching::Patch;
 use std::sync::Mutex;
-use std::thread::sleep;
-use std::time::Duration;
 
 
 pub const EMPTY: &str = "";
@@ -74,7 +72,6 @@ extern "C" fn create_settings(event: &Event<SystemEvent>) {
                                 bank_list.push(Il2CppString::to_string(get_equip(item, None)));
                             }
                         }
-                        sleep(Duration::from_secs(5));
                     }
                 }
                 _ => {},
