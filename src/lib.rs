@@ -83,7 +83,10 @@ extern "C" fn create_settings(event: &Event<SystemEvent>) {
                             }
                         }
                     }
-                }
+                },
+                SystemEvent::SaveLoaded { slot_id } => {
+                    patch(GameVariableManager::get_bool(ESID_KEY));
+                },
                 _ => {},
             }
         }
@@ -103,7 +106,7 @@ pub fn load_settings1(this: u64, stream: u64, method_info: OptionalMethod) -> bo
             create_variables();
         }
 
-        patch(GameVariableManager::get_bool(ESID_KEY));
+        // patch(GameVariableManager::get_bool(ESID_KEY));
     }
 
     return value;
