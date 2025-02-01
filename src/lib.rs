@@ -55,6 +55,9 @@ extern "C" fn esid_Toggle() -> &'static mut ConfigBasicMenuItem {
     ConfigBasicMenuItem::new_switch::<EsidMod>("No Unique Weapons")
 }
 
+#[skyline::from_offset(0x3780700)]
+pub fn is_null_empty(this: &Il2CppString, method_info: OptionalMethod) -> bool;
+
 extern "C" fn create_settings(event: &Event<SystemEvent>) {
     unsafe {
 
@@ -69,7 +72,14 @@ extern "C" fn create_settings(event: &Event<SystemEvent>) {
                             for x in 0..item_list.len()
                             {
                                 let item = &item_list[x];
-                                bank_list.push(Il2CppString::to_string(get_equip(item, None)));
+                                let esid = get_equip(item, None).copy();
+                                if !is_null_empty(esid, None)
+                                {
+                                    bank_list.push(esid.to_string());
+                                }
+                                else{
+                                    bank_list.push(EMPTY.to_string());
+                                }
                             }
                         }
                     }
@@ -77,7 +87,6 @@ extern "C" fn create_settings(event: &Event<SystemEvent>) {
                 _ => {},
             }
         }
-        // else {  println!("We received a missing event, and we don't care!"); }
     }
 }
 
